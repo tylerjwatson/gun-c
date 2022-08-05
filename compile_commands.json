@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/tw/src/gun-c",
+  "command": "/usr/bin/cc  -I/home/tw/src/gun-c/include  -o CMakeFiles/gunc.dir/src/gun.c.o -c /home/tw/src/gun-c/src/gun.c",
+  "file": "/home/tw/src/gun-c/src/gun.c"
+}
+]

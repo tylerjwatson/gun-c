@@ -4,5 +4,10 @@ cmake_minimum_required(VERSION 3.10)
 project(gunc VERSION 0.1)
 
 add_library(gunc src/gun.c)
+add_executable(gun src/cli.c)
 
-target_include_directories(gunc PUBLIC "${CMAKE_ROOT}/include")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include_directories("include")
+
+target_link_libraries(gun gunc)
