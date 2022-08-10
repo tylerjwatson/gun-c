@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <stdint.h>
+#include <libwebsockets.h>
 
 #ifdef __cplusplus
 extern "C" {

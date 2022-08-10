@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(gunc VERSION 0.1)
 
+find_package(Libwebsockets CONFIG REQUIRED)
+find_library(WS websockets REQUIRED)
+
 add_library(gunc src/gun.c)
 add_executable(gun src/cli.c)
 
@@ -10,4 +13,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories("include")
 
-target_link_libraries(gun gunc)
+
+
+target_link_libraries(gun gunc ${WS})
