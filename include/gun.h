@@ -18,6 +18,9 @@ struct gun_peer {
 
 struct gun_context {
 	struct gun_peer *peer_list;
+
+	struct lws_context *ws_context;
+	struct lws_sorted_usec_list sul;
 };
 
 struct gun_node {};
@@ -40,6 +43,17 @@ int gun_context_add_peer(struct gun_context *context, const char *peer);
   * Frees a gun context and all associated memoey.
   */
 void gun_context_free(struct gun_context *context);
+
+/*********************** COM **************************/
+
+/**
+  * Initialize COM - the gun communication layer.
+  * Requries a pointer to a fully-initialized gun
+  * context.
+  */
+int gun_com_init(struct gun_context *context);
+
+int gun_com_service_request(struct gun_context *context);
 
 #ifdef __cplusplus
 }

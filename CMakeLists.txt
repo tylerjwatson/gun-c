@@ -6,13 +6,12 @@ project(gunc VERSION 0.1)
 find_package(Libwebsockets CONFIG REQUIRED)
 find_library(WS websockets REQUIRED)
 
-add_library(gunc src/gun.c)
+add_library(gunc src/gun.c src/com.c)
 add_executable(gun src/cli.c)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories("include")
 
-
-
+target_link_libraries(gunc ${WS})
 target_link_libraries(gun gunc ${WS})

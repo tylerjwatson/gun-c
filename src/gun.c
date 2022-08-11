@@ -24,9 +24,15 @@ int gun_context_new(struct gun_context **out_context)
 
 int gun_context_init(struct gun_context *context)
 {
+	int ret = 0;
+
 	memset(context, 0, sizeof(*context));
 
-	return 0;
+	if ((ret = gun_com_init(context)) < 0) {
+		return ret;
+	}
+
+	return ret;
 }
 
 int gun_context_add_peer(struct gun_context *context, const char *peer_url)
@@ -70,6 +76,8 @@ static inline void gun_context_free_peers(struct gun_context *context)
 
 void gun_context_free(struct gun_context *context)
 {
+	if (context->ws_context)
+		lws_context_destroy(context->ws_context);
 	gun_context_free_peers(context);
 	free(context);
 }

@@ -1,7 +1,17 @@
 [
 {
-  "directory": "/home/tw/src/gun-c",
-  "command": "/usr/bin/cc  -I/home/tw/src/gun-c/include  -o CMakeFiles/gunc.dir/src/gun.c.o -c /home/tw/src/gun-c/src/gun.c",
+  "directory": "/home/tw/src/gun-c/build",
+  "command": "/usr/bin/gcc  -I/home/tw/src/gun-c/include -g -o CMakeFiles/gunc.dir/src/gun.c.o -c /home/tw/src/gun-c/src/gun.c",
   "file": "/home/tw/src/gun-c/src/gun.c"
+},
+{
+  "directory": "/home/tw/src/gun-c/build",
+  "command": "/usr/bin/gcc  -I/home/tw/src/gun-c/include -g -o CMakeFiles/gunc.dir/src/com.c.o -c /home/tw/src/gun-c/src/com.c",
+  "file": "/home/tw/src/gun-c/src/com.c"
+},
+{
+  "directory": "/home/tw/src/gun-c/build",
+  "command": "/usr/bin/gcc  -I/home/tw/src/gun-c/include -g -o CMakeFiles/gun.dir/src/cli.c.o -c /home/tw/src/gun-c/src/cli.c",
+  "file": "/home/tw/src/gun-c/src/cli.c"
 }
 ]
