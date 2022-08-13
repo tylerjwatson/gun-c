@@ -29,7 +29,7 @@ int main(int argc, const char **argv)
 	gun_context_add_peer(context, "ws://localhost:3034");
 
 	/* main run loop */
-	while (running && n >= 0)
+	while (running && !context->should_abort && n >= 0)
 		n = gun_com_service_request(context);
 
 	gun_context_free(context);

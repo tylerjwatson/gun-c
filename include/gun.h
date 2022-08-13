@@ -7,20 +7,25 @@
 #include <stdint.h>
 #include <libwebsockets.h>
 
+struct yuarel;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct gun_peer {
-	char *peer;
+	void *peer_data;
+	struct yuarel *url;
 	struct gun_peer *next;
 };
 
 struct gun_context {
 	struct gun_peer *peer_list;
-
 	struct lws_context *ws_context;
+	struct lws *lws;
 	struct lws_sorted_usec_list sul;
+
+	volatile int should_abort;
 };
 
 struct gun_node {};

@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "gun.h"
+#include "url.h"
 
 int gun_context_new(struct gun_context **out_context)
 {
@@ -37,18 +38,35 @@ int gun_context_init(struct gun_context *context)
 
 int gun_context_add_peer(struct gun_context *context, const char *peer_url)
 {
+	int ret = 0;
 	struct gun_peer *peer = context->peer_list, *new_peer;
+	struct yuarel *url;
 
 	while (peer && peer->next)
 		peer = peer->next;
 
 	if ((new_peer = malloc(sizeof(*new_peer))) == NULL) {
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto out;
 	}
 
-	if ((new_peer->peer = strdup(peer_url)) == NULL) {
-		free(new_peer);
-		return -ENOMEM;
+	if ((new_peer->peer_data = strdup(peer_url)) == NULL) {
+		ret = -ENOMEM;
+		goto peer_out;
+	}
+
+	if ((new_peer->url = malloc(sizeof(struct yuarel))) == NULL) {
+		ret = -ENOMEM;
+		goto peer_data_out;
+	}
+
+	/* According to yuarel documentation the parse function
+   * modifies the string passed into it, so use a copy
+   * here.
+   */
+	if (yuarel_parse(new_peer->url, new_peer->peer_data) == -1) {
+		ret = -100; // TODO: error enums and handling
+		goto url_out;
 	}
 
 	new_peer->next = NULL;
@@ -59,7 +77,20 @@ int gun_context_add_peer(struct gun_context *context, const char *peer_url)
 		peer->next = new_peer;
 	}
 
-	return 0;
+	ret = 0;
+	goto out;
+
+url_out:
+	free(new_peer->url);
+
+peer_data_out:
+	free(new_peer->peer_data);
+
+peer_out:
+	free(new_peer);
+
+out:
+	return ret;
 }
 
 static inline void gun_context_free_peers(struct gun_context *context)
@@ -68,7 +99,8 @@ static inline void gun_context_free_peers(struct gun_context *context)
 
 	while (n) {
 		tmp = n;
-		free(n->peer);
+		free(n->url);
+		free(n->peer_data);
 		n = n->next;
 		free(tmp);
 	}
