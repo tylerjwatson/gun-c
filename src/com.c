@@ -11,6 +11,19 @@ static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 	struct gun_context *context = (struct gun_context *)user_data;
 
 	switch (reason) {
+	case LWS_CALLBACK_CLIENT_WRITEABLE:
+		lws_callback_on_writable(wsi);
+		break;
+	case LWS_CALLBACK_CLIENT_ESTABLISHED:
+		fprintf(stderr, "connection established to %s port %d\n",
+			context->peer_list->url->host,
+			context->peer_list->url->port);
+		break;
+
+	case LWS_CALLBACK_CLIENT_RECEIVE:
+		fprintf(stderr, "recv data: %s\n", (char *)buf);
+		break;
+
 	case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
 		fprintf(stderr, "connection error: %s\n", (char *)buf);
 		context->should_abort = 1;
@@ -25,7 +38,7 @@ static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 
 static struct lws_protocols protocols[] = {
 	{ "gun", wsi_callback, 0, 0 },
-	{ NULL, NULL, 0, 0, 0, NULL },
+	{ NULL, NULL, 0, 0 },
 };
 
 static void wsi_connect_to_peer(struct lws_sorted_usec_list *sul)
@@ -38,7 +51,8 @@ static void wsi_connect_to_peer(struct lws_sorted_usec_list *sul)
 	info.context = context->ws_context;
 	info.port = peer->url->port;
 	info.address = peer->url->host;
-	info.path = info.origin = peer->url->path;
+	info.host = lws_canonical_hostname(context->ws_context);
+	info.path = info.origin = "/gun";
 	info.ssl_connection = 0;
 	info.protocol = "gun";
 	info.local_protocol_name = "gun";
@@ -64,14 +78,14 @@ int gun_com_init(struct gun_context *context)
 		goto out;
 	}
 
+	lws_sul_schedule(context->ws_context, 0, &context->sul,
+			 wsi_connect_to_peer, 1);
+
 out:
 	return ret;
 }
 
 int gun_com_service_request(struct gun_context *context)
 {
-	lws_sul_schedule(context->ws_context, 0, &context->sul,
-			 wsi_connect_to_peer, 1);
-
-	return lws_service(context->ws_context, 0 /*UNUSED*/);
+	return lws_service(context->ws_context, 0);
 }
