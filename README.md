@@ -20,3 +20,13 @@ $ ./build.sh
 ```bash
 build/gun
 ```
+
+## Credits
+This software has integrated code from the following libraries:
+* [Libwebsockets](https://libwebsockets.org/) (MIT Licensed and others)
+* [Yuarel](https://github.com/jacketizer/libyuarel) (MIT Licensed)
+* [mjson](https://github.com/cesanta/mjson) (MIT Licensed)
+* [log.c](https://github.com/rxi/log.c) (MIT Licensed)
+* [ht](https://github.com/benhoyt/ht) (MIT Licensed)
+
+Many thanks to the authors and contributors of this code.
