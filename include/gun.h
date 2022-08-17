@@ -11,8 +11,10 @@
 extern "C" {
 #endif
 
+// forward declarations
 struct yuarel;
 struct gun_context;
+struct ht;
 
 /**
  * Callback that happens when a message has been received from the
@@ -20,6 +22,11 @@ struct gun_context;
  */
 typedef void (*gun_msg_cb_t)(struct gun_context *context, size_t msg_len,
 			     const char *msg);
+
+struct gun_dup_context {
+	unsigned ttl;
+	struct ht *id_table;
+};
 
 struct gun_peer {
 	void *peer_data;
@@ -32,6 +39,7 @@ struct gun_context {
 	struct lws_context *ws_context;
 	struct lws *lws;
 	struct lws_sorted_usec_list sul;
+	struct gun_dup_context dup;
 	gun_msg_cb_t on_message;
 
 	volatile int should_abort;
@@ -68,6 +76,8 @@ void gun_context_free(struct gun_context *context);
 int gun_com_init(struct gun_context *context);
 
 int gun_com_service_request(struct gun_context *context);
+
+/*********************** DUP **************************/
 
 #ifdef __cplusplus
 }

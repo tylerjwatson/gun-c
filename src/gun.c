@@ -8,6 +8,7 @@
 #include "gun.h"
 #include "url.h"
 #include "log.h"
+#include "dup.h"
 
 static void __gun_on_message(struct gun_context *context, size_t len,
 			     const char *msg)
@@ -38,6 +39,10 @@ int gun_context_init(struct gun_context *context)
 	context->on_message = __gun_on_message;
 
 	if ((ret = gun_com_init(context)) < 0) {
+		return ret;
+	}
+
+	if (gun_dup_init(&context->dup, 900) < 0) {
 		return ret;
 	}
 
@@ -115,6 +120,7 @@ static inline void gun_context_free_peers(struct gun_context *context)
 
 void gun_context_free(struct gun_context *context)
 {
+	gun_dup_context_free(&context->dup);
 	if (context->ws_context)
 		lws_context_destroy(context->ws_context);
 	gun_context_free_peers(context);

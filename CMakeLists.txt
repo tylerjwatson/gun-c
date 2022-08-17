@@ -10,6 +10,7 @@ add_library(gunc
   src/ht.c
   src/mjson.c
   src/log.c
+  src/dup.c
   src/gun.c
   src/com.c
   src/url.c)
