@@ -27,7 +27,7 @@ int main(int argc, const char **argv)
 
 	gun_context_add_peer(context, "ws://localhost:3030");
 
-	lws_set_log_level(0xFFFFFFFF, NULL);
+	// lws_set_log_level(0xFFFFFFFF, NULL);
 
 	/* main run loop */
 	while (running && !context->should_abort && n >= 0)

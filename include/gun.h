@@ -7,11 +7,19 @@
 #include <stdint.h>
 #include <libwebsockets.h>
 
-struct yuarel;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct yuarel;
+struct gun_context;
+
+/**
+ * Callback that happens when a message has been received from the
+ * com module.
+ */
+typedef void (*gun_msg_cb_t)(struct gun_context *context, size_t msg_len,
+			     const char *msg);
 
 struct gun_peer {
 	void *peer_data;
@@ -24,6 +32,7 @@ struct gun_context {
 	struct lws_context *ws_context;
 	struct lws *lws;
 	struct lws_sorted_usec_list sul;
+	gun_msg_cb_t on_message;
 
 	volatile int should_abort;
 };

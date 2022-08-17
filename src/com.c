@@ -1,9 +1,11 @@
 //  SPDX-FileCopyrightText: 2022 Tyler Watson <tyler@tw.id.au>
 //  SPDX-License-Identifier: MIT
 
+#include <stdio.h>
+
 #include "gun.h"
 #include "url.h"
-#include <stdio.h>
+#include "log.h"
 
 static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 			void *user_data, void *buf, size_t len)
@@ -15,20 +17,21 @@ static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 		lws_callback_on_writable(wsi);
 		break;
 	case LWS_CALLBACK_CLIENT_ESTABLISHED:
-		fprintf(stderr, "connection established to %s port %d\n",
-			context->peer_list->url->host,
-			context->peer_list->url->port);
+		log_info("connection established with peer %s:%d\n",
+			 context->peer_list->url->host,
+			 context->peer_list->url->port);
 		break;
-
 	case LWS_CALLBACK_CLIENT_RECEIVE:
-		fprintf(stderr, "recv data: %s\n", (char *)buf);
-		break;
+		log_debug("rx msg=%s len=%d\n", (const char *)buf, len);
 
+		if (context->on_message != NULL) {
+			context->on_message(context, len, (const char *)buf);
+		}
+		break;
 	case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-		fprintf(stderr, "connection error: %s\n", (char *)buf);
+		log_error("peer connection error: %s\n", (char *)buf);
 		context->should_abort = 1;
 		break;
-		// TODO
 	default:
 		break;
 	}

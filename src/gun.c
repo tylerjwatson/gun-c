@@ -7,6 +7,12 @@
 
 #include "gun.h"
 #include "url.h"
+#include "log.h"
+
+static void __gun_on_message(struct gun_context *context, size_t len,
+			     const char *msg)
+{
+}
 
 int gun_context_new(struct gun_context **out_context)
 {
@@ -28,6 +34,8 @@ int gun_context_init(struct gun_context *context)
 	int ret = 0;
 
 	memset(context, 0, sizeof(*context));
+
+	context->on_message = __gun_on_message;
 
 	if ((ret = gun_com_init(context)) < 0) {
 		return ret;
@@ -71,11 +79,10 @@ int gun_context_add_peer(struct gun_context *context, const char *peer_url)
 
 	new_peer->next = NULL;
 
-	if (!context->peer_list) {
+	if (!context->peer_list)
 		context->peer_list = new_peer;
-	} else {
+	else
 		peer->next = new_peer;
-	}
 
 	ret = 0;
 	goto out;
