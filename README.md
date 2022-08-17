@@ -1,6 +1,10 @@
 # gun-c
 A [gun.js](https://github.com/amark/gun) port to C using libwebsockets, ideal for running on small and embedded devices.
 
+Currently the software is imcomplete, and the first milestone is to understand the Gun protocol and implement an in-memory client capable of serving nodes to a distributed Gun network.
+
+The eventual goal for this project is a full port.
+
 ## Building
 
 Requirements:
