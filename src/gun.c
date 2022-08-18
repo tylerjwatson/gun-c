@@ -42,7 +42,7 @@ int gun_context_init(struct gun_context *context)
 		return ret;
 	}
 
-	if (gun_dup_init(&context->dup, 900) < 0) {
+	if (gun_dup_init(context, &context->dup, 900) < 0) {
 		return ret;
 	}
 

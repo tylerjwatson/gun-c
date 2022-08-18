@@ -25,6 +25,8 @@ typedef void (*gun_msg_cb_t)(struct gun_context *context, size_t msg_len,
 
 struct gun_dup_context {
 	unsigned ttl;
+	struct lws_context *ws_context;
+	struct lws_sorted_usec_list sul;
 	struct ht *id_table;
 };
 

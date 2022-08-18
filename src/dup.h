@@ -9,7 +9,8 @@ struct gun_dup_entry {
 	time_t expiry;
 };
 
-int gun_dup_init(struct gun_dup_context *context, unsigned ttl);
+int gun_dup_init(const struct gun_context *gun_context,
+		 struct gun_dup_context *context, unsigned ttl);
 
 /**
   * Tracks whether a message ID has already been seen.

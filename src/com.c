@@ -17,19 +17,19 @@ static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 		lws_callback_on_writable(wsi);
 		break;
 	case LWS_CALLBACK_CLIENT_ESTABLISHED:
-		log_info("connection established with peer %s:%d\n",
+		log_info("connection established with peer %s:%d",
 			 context->peer_list->url->host,
 			 context->peer_list->url->port);
 		break;
 	case LWS_CALLBACK_CLIENT_RECEIVE:
-		log_debug("rx msg=%s len=%d\n", (const char *)buf, len);
+		log_trace("rx msg=%s len=%d", (const char *)buf, len);
 
 		if (context->on_message != NULL) {
 			context->on_message(context, len, (const char *)buf);
 		}
 		break;
 	case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-		log_error("peer connection error: %s\n", (char *)buf);
+		log_error("peer connection error: %s", (char *)buf);
 		context->should_abort = 1;
 		break;
 	default:
