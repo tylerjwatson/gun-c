@@ -7,13 +7,7 @@
 #include <string.h>
 #include <libwebsockets.h>
 
-/* 
-  Not sure if this is needed here?
-  
-  It is in gun.h to set the bool members
-*/
-#include <stdbool.h>
-#include "log.h"
+
 /* 
   Not sure if this is needed here?
   
@@ -21,6 +15,7 @@
 */
 #include <stdbool.h>
 
+#include "log.h"
 #include "gun.h"
 
 static volatile int running = 1;
@@ -233,6 +228,11 @@ int main(int argc, char *argv[])
 
 	if (!context->opts.quiet) {
 		lws_set_log_level(context->opts.log_level, NULL);
+	}
+
+	if (gun_com_start(context) < 0) {
+		log_fatal("Could not connect to peers.  Do you have any?");
+		goto out;
 	}
 
 	if (gun_com_start(context) < 0) {
