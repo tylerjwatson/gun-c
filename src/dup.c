@@ -35,7 +35,7 @@ void __gun_dup_collect_garbage(struct lws_sorted_usec_list *sul)
 		}
 	}
 
-	log_trace("dup: gc: %d expired items removed");
+	log_trace("dup: gc: %d expired items removed", count);
 
 	lws_sul_schedule(context->ws_context, 0, &context->sul,
 			 __gun_dup_collect_garbage, GARBAGE_TIMER_USECS);

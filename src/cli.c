@@ -13,6 +13,7 @@
   It is in gun.h to set the bool members
 */
 #include <stdbool.h>
+#include "log.h"
 
 #include "gun.h"
 
@@ -228,10 +229,16 @@ int main(int argc, char *argv[])
 		lws_set_log_level(context->opts.log_level, NULL);
 	}
 
+	if (gun_com_start(context) < 0) {
+		log_fatal("Could not connect to peers.  Do you have any?");
+		goto out;
+	}
+
 	/* main run loop */
 	while (running && !context->should_abort && n >= 0)
 		n = gun_com_service_request(context);
 
+out:
 	gun_context_free(context);
 
 	return ret;
