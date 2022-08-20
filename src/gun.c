@@ -38,6 +38,8 @@ int gun_context_init(struct gun_context *context)
 
 	context->on_message = __gun_on_message;
 
+	context->opts.log_level = TRACE;
+
 	if ((ret = gun_com_init(context)) < 0) {
 		return ret;
 	}

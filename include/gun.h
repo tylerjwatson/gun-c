@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <libwebsockets.h>
 
 #ifdef __cplusplus
@@ -34,6 +35,14 @@ struct gun_peer {
 	struct gun_peer *next;
 };
 
+enum LOG_LEVEL { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
+
+struct gun_context_options {
+	int log_level;
+	bool quiet;
+	bool daemon;
+};
+
 struct gun_context {
 	struct gun_peer *peer_list;
 	struct lws_context *ws_context;
@@ -41,6 +50,8 @@ struct gun_context {
 	struct lws_sorted_usec_list sul;
 	struct gun_dup_context dup;
 	gun_msg_cb_t on_message;
+
+	struct gun_context_options opts;
 
 	volatile int should_abort;
 };

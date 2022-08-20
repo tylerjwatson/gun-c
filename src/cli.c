@@ -7,12 +7,16 @@
 #include <string.h>
 #include <libwebsockets.h>
 
+/* 
+  Not sure if this is needed here?
+  
+  It is in gun.h to set the bool members
+*/
+#include <stdbool.h>
+
 #include "gun.h"
 
 static volatile int running = 1;
-
-extern int log_level;
-int log_level = 0;
 
 static void cli_sigint_handler()
 {
@@ -21,7 +25,7 @@ static void cli_sigint_handler()
 
 static void __print_help_and_exit()
 {
-	printf("Gunc  - A gun.js port to C using libwebsockets, \n"
+	printf("Gunc - A gun.js port to C using libwebsockets, \n"
 
 	       "ideal for running on small and embedded devices.\n\n"
 
@@ -32,9 +36,13 @@ static void __print_help_and_exit()
 	       "       [-l LOGLEVEL | --log-level LOGLEVEL]\n\n"
 
 	       "options:\n\n"
+
 	       "-h, --help                        Show this help message\n\n"
+
 	       "-p, --peer <PEER_URL>             Add a gun peer by it's url i.e. http://localhost:3030\n\n"
+
 	       "-q, --quiet                       Silence all logging\n\n"
+
 	       "-l, --log-level <LOG_LEVEL>       Optionally set the log level\n"
 	       "                                  Valid levels are:\n"
 	       "                                    - TRACE [default]\n"
@@ -42,10 +50,17 @@ static void __print_help_and_exit()
 	       "                                    - INFO\n"
 	       "                                    - WARN\n"
 	       "                                    - ERROR\n"
-	       "                                    - FATAl\n\n"
+	       "                                    - FATAL\n\n"
+
 	       "-d                                Run as daemon (currently not supported)\n\n");
 
-	// Not sure if this is okay or if we should free stuff first?
+	/* Not sure if this is okay or if we should free stuff first?
+
+     Looking at the docs for exit, We can add functions to atexit to
+     have them called sequentially on exit?
+
+     Keen to get your thoughts on what is best here.
+  */
 	exit(EXIT_SUCCESS);
 }
 
@@ -58,10 +73,8 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 	}
 
 	int c;
-	int digit_optind = 0;
 
 	while (1) {
-		int this_option_optind = optind ? optind : 1;
 		int option_index = 0;
 
 		static struct option long_options[] = {
@@ -75,7 +88,7 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 		c = getopt_long(argc, argv, "hqp:l:d", long_options,
 				&option_index);
 
-		// break while loop after last option
+		// break while loop once all opts parsed
 		if (c == -1)
 			break;
 
@@ -98,9 +111,7 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 			 --quiet | -q
       */
 
-			/* 
-        TODO Add quiet logic here.
-      */
+			context->opts.quiet = true;
 
 			break;
 
@@ -118,47 +129,58 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
        LOG_FATAL = 5 
      */
 
-			if (strcmp(optarg, "TRACE") == 0) {
+			if (strcmp(optarg, "TRACE") == TRACE) {
 				// Trace is the default log level, so don't set it
 				break;
 			}
 
 			if (strcmp(optarg, "DEBUG") == 0) {
-				log_level = 1;
+				context->opts.log_level = DEBUG;
+				// log_level = 1;
 				break;
 			}
 
 			if (strcmp(optarg, "INFO") == 0) {
-				log_level = 2;
+				context->opts.log_level = INFO;
+				// log_level = 2;
 				break;
 			}
 
 			if (strcmp(optarg, "WARN") == 0) {
-				log_level = 3;
+				context->opts.log_level = WARN;
+				// log_level = 3;
 				break;
 			}
 
 			if (strcmp(optarg, "ERROR") == 0) {
-				log_level = 4;
+				context->opts.log_level = ERROR;
+				// log_level = 4;
 				break;
 			}
 
 			if (strcmp(optarg, "FATAL") == 0) {
-				log_level = 5;
+				context->opts.log_level = FATAL;
+				// log_level = 5;
 				break;
 			}
 
 			printf("Inavild log level '%s'", optarg);
 			printf("\n\n");
 			printf("Valid levels are:\n"
-			       "  - TRACE\n"
+			       "  - TRACE [default]\n"
 			       "  - DEBUG\n"
 			       "  - INFO\n"
 			       "  - WARN\n"
 			       "  - ERROR\n"
-			       "  - FATAl\n");
+			       "  - FATAL\n");
 
-			// Not sure if this is okay or if we should free stuff first?
+			/* Not sure if this is okay or if we should free stuff first?
+
+         Looking at the docs for exit, We can add functions to atexit to
+         have them called sequentially on exit?
+
+         Keen to get your thoughts on what is best here.
+      */
 			exit(EXIT_FAILURE);
 			break;
 
@@ -169,7 +191,9 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 
        To be done later
      */
-			printf("Yeah... I'm totally running as a deamon now ;)\n");
+			context->opts.daemon = true;
+
+			printf("-d (Run as deamon) is currently not supported\n");
 			break;
 
 		case 'h':
@@ -184,19 +208,6 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 			break;
 		}
 	}
-
-	/*
-   * TODO the getopt stuff
-   *
-   * usage: build/gun [-d] --peer ws://localhost:8080/gun --peer wss://something.else [-q | --quiet] [-l LOGLEVEL | --log-level LOGLEVEL]
-
-   *
-   * where
-   * - d is fork into the background (run as a daemon) to be done later
-   * - --peer is one or more websocket URLs of peers to connect to
-   * -q --quiet: silence all logging
-   * -l set log level of both libwebsockets and our own logging (see log.h for a valid list of levels)
-   */
 }
 
 int main(int argc, char *argv[])
@@ -213,9 +224,9 @@ int main(int argc, char *argv[])
 
 	__gun_cli_parse_commandline(argc, argv, context);
 
-	// gun_context_add_peer(context, "ws://localhost:3030");
-
-	lws_set_log_level(log_level, NULL);
+	if (!context->opts.quiet) {
+		lws_set_log_level(context->opts.log_level, NULL);
+	}
 
 	/* main run loop */
 	while (running && !context->should_abort && n >= 0)
