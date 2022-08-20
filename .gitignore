@@ -54,3 +54,6 @@ Mkfile.old
 dkms.conf
 
 build/
+
+# because lunar vim is wrong
+.git/
