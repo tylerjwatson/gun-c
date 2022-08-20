@@ -14,6 +14,12 @@
 */
 #include <stdbool.h>
 #include "log.h"
+/* 
+  Not sure if this is needed here?
+  
+  It is in gun.h to set the bool members
+*/
+#include <stdbool.h>
 
 #include "gun.h"
 
