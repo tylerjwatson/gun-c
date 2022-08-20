@@ -13,9 +13,6 @@ static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 	struct gun_context *context = (struct gun_context *)user_data;
 
 	switch (reason) {
-	case LWS_CALLBACK_CLIENT_WRITEABLE:
-		lws_callback_on_writable(wsi);
-		break;
 	case LWS_CALLBACK_CLIENT_ESTABLISHED:
 		log_info("connection established with peer %s:%d",
 			 context->peer_list->url->host,
