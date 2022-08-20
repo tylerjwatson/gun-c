@@ -63,6 +63,8 @@ int gun_context_add_peer(struct gun_context *context, const char *peer_url)
 		goto out;
 	}
 
+	memset(new_peer, 0, sizeof(*new_peer));
+
 	if ((new_peer->peer_data = strdup(peer_url)) == NULL) {
 		ret = -ENOMEM;
 		goto peer_out;
@@ -82,6 +84,7 @@ int gun_context_add_peer(struct gun_context *context, const char *peer_url)
 		goto url_out;
 	}
 
+	new_peer->context = context;
 	new_peer->next = NULL;
 
 	if (!context->peer_list)

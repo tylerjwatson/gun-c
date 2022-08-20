@@ -32,8 +32,11 @@ struct gun_dup_context {
 
 struct gun_peer {
 	void *peer_data;
+	struct gun_context *context;
 	struct yuarel *url;
+	struct lws_sorted_usec_list sul;
 	struct gun_peer *next;
+	uint16_t retries;
 };
 
 struct gun_context {
@@ -76,6 +79,14 @@ void gun_context_free(struct gun_context *context);
   * context.
   */
 int gun_com_init(struct gun_context *context);
+
+/**
+  * Start connecting to peers in the peer list.
+  *
+  * Requries a fully initialized COM interface, call gun_com_init
+  * first.
+  */
+int gun_com_start(struct gun_context *context);
 
 int gun_com_service_request(struct gun_context *context);
 

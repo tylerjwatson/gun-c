@@ -4,6 +4,8 @@
 #include <string.h>
 #include <libwebsockets.h>
 
+#include "log.h"
+
 #include "gun.h"
 
 static volatile int running = 1;
@@ -49,10 +51,16 @@ int main(int argc, const char *argv[])
 
 	// lws_set_log_level(0xFFFFFFFF, NULL);
 
+	if (gun_com_start(context) < 0) {
+		log_fatal("Could not connect to peers.  Do you have any?");
+		goto out;
+	}
+
 	/* main run loop */
 	while (running && !context->should_abort && n >= 0)
 		n = gun_com_service_request(context);
 
+out:
 	gun_context_free(context);
 
 	return ret;
