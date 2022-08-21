@@ -4,4 +4,4 @@ pushd build
 cmake ..
 make
 popd
-build/gun
+build/gun -p ws://localhost:3030/gun

@@ -206,6 +206,8 @@ int main(int argc, char *argv[])
 	int ret = 0, n = 0;
 	struct gun_context *context;
 
+	log_info("gunc starting up");
+
 	signal(SIGINT, cli_sigint_handler);
 
 	if (gun_context_new(&context) < 0) {

@@ -44,17 +44,18 @@ static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 {
 	struct gun_peer *peer = (struct gun_peer *)user_data;
 	struct gun_context *context;
-	
+
 	if (peer)
 		context = peer->context;
 
 	switch (reason) {
 	case LWS_CALLBACK_CLIENT_ESTABLISHED:
-		log_info("connection established with peer %s:%d",
+		log_info("com: connection established with peer %s:%d",
 			 peer->url->host, peer->url->port);
 		break;
 	case LWS_CALLBACK_CLIENT_RECEIVE:
-		log_trace("rx msg=%s len=%d", (const char *)buf, len);
+		log_trace("com: rx msg=%s len=%d peer=%s:%d", (const char *)buf,
+			  len, peer->url->host, peer->url->port);
 
 		if (context->on_message != NULL) {
 			context->on_message(context, len, (const char *)buf);
@@ -106,8 +107,6 @@ int gun_com_start(struct gun_context *context)
 			return -1;
 		}
 
-		log_info("com: connecting to peer %s:%d", peer->url->host,
-			 peer->url->port);
 		lws_sul_schedule(context->ws_context, 0, &peer->sul,
 				 wsi_connect_to_peer, ++i * 1000);
 
