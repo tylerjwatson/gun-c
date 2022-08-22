@@ -1,12 +1,12 @@
 
 
+#include <asm-generic/errno-base.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h> /* for exit */
 #include <getopt.h>
 #include <string.h>
 #include <libwebsockets.h>
-
 
 /* 
   Not sure if this is needed here?
@@ -20,58 +20,70 @@
 
 static volatile int running = 1;
 
+static bool must_exit = false;
+
 static void cli_sigint_handler()
 {
 	running = 0;
 }
 
-static void __print_help_and_exit()
+static const char *help_text =
+	"Gunc  - A gun.js port to C using libwebsockets, \n"
+
+	"ideal for running on small and embedded devices.\n\n"
+
+	"usage:\n\n"
+
+	"  %s --peer | -p PEER_URL [-p | --peer PEER_URL] \n"
+	"       [-h | --help] [-d] [-q | --quiet] \n"
+	"       [-l LOGLEVEL | --log-level LOGLEVEL]\n\n"
+
+	"options:\n\n"
+	"-h, --help                        Show this help message\n\n"
+	"-p, --peer <PEER_URL>             Add a gun peer by it's url i.e. http://localhost:3030\n\n"
+	"-q, --quiet                       Silence all logging\n\n"
+	"-l, --log-level <LOG_LEVEL>       Optionally set the log level\n"
+	"                                  Valid levels are:\n"
+	"                                    - TRACE [default]\n"
+	"                                    - DEBUG\n"
+	"                                    - INFO\n"
+	"                                    - WARN\n"
+	"                                    - ERROR\n"
+	"                                    - FATAl\n\n"
+	"-d                                Run as daemon (currently not supported)\n\n";
+
+static int __print_help_and_exit(char *name)
 {
-	printf("Gunc - A gun.js port to C using libwebsockets, \n"
+	size_t name_len = strlen(name);
+	size_t help_len = strlen(help_text);
 
-	       "ideal for running on small and embedded devices.\n\n"
+	char *help_str;
 
-	       "usage:\n\n"
+	size_t str_len = name_len + help_len + 1;
 
-	       "  gunc --peer | -p PEER_URL [-p | --peer PEER_URL] \n"
-	       "       [-h | --help] [-d] [-q | --quiet] \n"
-	       "       [-l LOGLEVEL | --log-level LOGLEVEL]\n\n"
+	if ((help_str = malloc(name_len + help_len + 1)) == NULL) {
+		log_fatal(
+			"Not enough memory to print help text. I'm really sorry about this :(");
+		return -ENOMEM;
+	}
 
-	       "options:\n\n"
+	snprintf(help_str, str_len, help_text, name);
 
-	       "-h, --help                        Show this help message\n\n"
+	printf("%s", help_str);
 
-	       "-p, --peer <PEER_URL>             Add a gun peer by it's url i.e. http://localhost:3030\n\n"
+	free(help_str);
 
-	       "-q, --quiet                       Silence all logging\n\n"
+	must_exit = true;
 
-	       "-l, --log-level <LOG_LEVEL>       Optionally set the log level\n"
-	       "                                  Valid levels are:\n"
-	       "                                    - TRACE [default]\n"
-	       "                                    - DEBUG\n"
-	       "                                    - INFO\n"
-	       "                                    - WARN\n"
-	       "                                    - ERROR\n"
-	       "                                    - FATAL\n\n"
-
-	       "-d                                Run as daemon (currently not supported)\n\n");
-
-	/* Not sure if this is okay or if we should free stuff first?
-
-     Looking at the docs for exit, We can add functions to atexit to
-     have them called sequentially on exit?
-
-     Keen to get your thoughts on what is best here.
-  */
-	exit(EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }
 
-static void __gun_cli_parse_commandline(int argc, char *argv[],
-					struct gun_context *context)
+static int __gun_cli_parse_commandline(int argc, char *argv[],
+				       struct gun_context *context)
 {
 	// If no args print help and exit
 	if (argc == 1) {
-		__print_help_and_exit();
+		return __print_help_and_exit(argv[0]);
 	}
 
 	int c;
@@ -138,31 +150,26 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 
 			if (strcmp(optarg, "DEBUG") == 0) {
 				context->opts.log_level = DEBUG;
-				// log_level = 1;
 				break;
 			}
 
 			if (strcmp(optarg, "INFO") == 0) {
 				context->opts.log_level = INFO;
-				// log_level = 2;
 				break;
 			}
 
 			if (strcmp(optarg, "WARN") == 0) {
 				context->opts.log_level = WARN;
-				// log_level = 3;
 				break;
 			}
 
 			if (strcmp(optarg, "ERROR") == 0) {
 				context->opts.log_level = ERROR;
-				// log_level = 4;
 				break;
 			}
 
 			if (strcmp(optarg, "FATAL") == 0) {
 				context->opts.log_level = FATAL;
-				// log_level = 5;
 				break;
 			}
 
@@ -176,15 +183,7 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 			       "  - ERROR\n"
 			       "  - FATAL\n");
 
-			/* Not sure if this is okay or if we should free stuff first?
-
-         Looking at the docs for exit, We can add functions to atexit to
-         have them called sequentially on exit?
-
-         Keen to get your thoughts on what is best here.
-      */
-			exit(EXIT_FAILURE);
-			break;
+			return EXIT_FAILURE;
 
 		case 'd':
 			/* 
@@ -206,10 +205,11 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
        prints help message and exits
      */
 		default:
-			__print_help_and_exit();
-			break;
+			return __print_help_and_exit(argv[0]);
 		}
 	}
+
+	return EXIT_SUCCESS;
 }
 
 int main(int argc, char *argv[])
@@ -225,6 +225,10 @@ int main(int argc, char *argv[])
 	}
 
 	__gun_cli_parse_commandline(argc, argv, context);
+
+	if (must_exit == true) {
+		goto out;
+	}
 
 	if (!context->opts.quiet) {
 		lws_set_log_level(context->opts.log_level, NULL);
