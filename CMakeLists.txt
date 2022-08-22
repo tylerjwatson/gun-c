@@ -6,6 +6,8 @@ project(gunc VERSION 0.1)
 find_package(Libwebsockets CONFIG REQUIRED)
 find_library(WS websockets REQUIRED)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_library(gunc
   src/ht.c
   src/mjson.c
@@ -16,8 +18,6 @@ add_library(gunc
   src/url.c)
 
 add_executable(gun src/cli.c)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories("include")
 

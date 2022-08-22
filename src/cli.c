@@ -1,5 +1,6 @@
 
 
+#include <asm-generic/errno-base.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h> /* for exit */
@@ -7,63 +8,87 @@
 #include <string.h>
 #include <libwebsockets.h>
 
-#include "log.h"
+/* 
+  Not sure if this is needed here?
+  
+  It is in gun.h to set the bool members
+*/
+#include <stdbool.h>
 
+#include "log.h"
 #include "gun.h"
 
 static volatile int running = 1;
 
-extern int log_level;
-int log_level = 0;
+static bool must_exit = false;
 
 static void cli_sigint_handler()
 {
 	running = 0;
 }
 
-static void __print_help_and_exit()
+static const char *help_text =
+	"Gunc  - A gun.js port to C using libwebsockets, \n"
+
+	"ideal for running on small and embedded devices.\n\n"
+
+	"usage:\n\n"
+
+	"  %s --peer | -p PEER_URL [-p | --peer PEER_URL] \n"
+	"       [-h | --help] [-d] [-q | --quiet] \n"
+	"       [-l LOGLEVEL | --log-level LOGLEVEL]\n\n"
+
+	"options:\n\n"
+	"-h, --help                        Show this help message\n\n"
+	"-p, --peer <PEER_URL>             Add a gun peer by it's url i.e. http://localhost:3030\n\n"
+	"-q, --quiet                       Silence all logging\n\n"
+	"-l, --log-level <LOG_LEVEL>       Optionally set the log level\n"
+	"                                  Valid levels are:\n"
+	"                                    - TRACE [default]\n"
+	"                                    - DEBUG\n"
+	"                                    - INFO\n"
+	"                                    - WARN\n"
+	"                                    - ERROR\n"
+	"                                    - FATAl\n\n"
+	"-d                                Run as daemon (currently not supported)\n\n";
+
+static int __print_help_and_exit(char *name)
 {
-	printf("Gunc  - A gun.js port to C using libwebsockets, \n"
+	size_t name_len = strlen(name);
+	size_t help_len = strlen(help_text);
 
-	       "ideal for running on small and embedded devices.\n\n"
+	char *help_str;
 
-	       "usage:\n\n"
+	size_t str_len = name_len + help_len + 1;
 
-	       "  gunc --peer | -p PEER_URL [-p | --peer PEER_URL] \n"
-	       "       [-h | --help] [-d] [-q | --quiet] \n"
-	       "       [-l LOGLEVEL | --log-level LOGLEVEL]\n\n"
+	if ((help_str = malloc(name_len + help_len + 1)) == NULL) {
+		log_fatal(
+			"Not enough memory to print help text. I'm really sorry about this :(");
+		return -ENOMEM;
+	}
 
-	       "options:\n\n"
-	       "-h, --help                        Show this help message\n\n"
-	       "-p, --peer <PEER_URL>             Add a gun peer by it's url i.e. http://localhost:3030\n\n"
-	       "-q, --quiet                       Silence all logging\n\n"
-	       "-l, --log-level <LOG_LEVEL>       Optionally set the log level\n"
-	       "                                  Valid levels are:\n"
-	       "                                    - TRACE [default]\n"
-	       "                                    - DEBUG\n"
-	       "                                    - INFO\n"
-	       "                                    - WARN\n"
-	       "                                    - ERROR\n"
-	       "                                    - FATAl\n\n"
-	       "-d                                Run as daemon (currently not supported)\n\n");
+	snprintf(help_str, str_len, help_text, name);
 
-	// Not sure if this is okay or if we should free stuff first?
-	exit(EXIT_SUCCESS);
+	printf("%s", help_str);
+
+	free(help_str);
+
+	must_exit = true;
+
+	return EXIT_SUCCESS;
 }
 
-static void __gun_cli_parse_commandline(int argc, char *argv[],
-					struct gun_context *context)
+static int __gun_cli_parse_commandline(int argc, char *argv[],
+				       struct gun_context *context)
 {
 	// If no args print help and exit
 	if (argc == 1) {
-		__print_help_and_exit();
+		return __print_help_and_exit(argv[0]);
 	}
 
 	int c;
-	int digit_optind = 0;
 
 	while (1) {
-		int this_option_optind = optind ? optind : 1;
 		int option_index = 0;
 
 		static struct option long_options[] = {
@@ -77,7 +102,7 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 		c = getopt_long(argc, argv, "hqp:l:d", long_options,
 				&option_index);
 
-		// break while loop after last option
+		// break while loop once all opts parsed
 		if (c == -1)
 			break;
 
@@ -100,9 +125,7 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 			 --quiet | -q
       */
 
-			/* 
-        TODO Add quiet logic here.
-      */
+			context->opts.quiet = true;
 
 			break;
 
@@ -120,49 +143,47 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
        LOG_FATAL = 5 
      */
 
-			if (strcmp(optarg, "TRACE") == 0) {
+			if (strcmp(optarg, "TRACE") == TRACE) {
 				// Trace is the default log level, so don't set it
 				break;
 			}
 
 			if (strcmp(optarg, "DEBUG") == 0) {
-				log_level = 1;
+				context->opts.log_level = DEBUG;
 				break;
 			}
 
 			if (strcmp(optarg, "INFO") == 0) {
-				log_level = 2;
+				context->opts.log_level = INFO;
 				break;
 			}
 
 			if (strcmp(optarg, "WARN") == 0) {
-				log_level = 3;
+				context->opts.log_level = WARN;
 				break;
 			}
 
 			if (strcmp(optarg, "ERROR") == 0) {
-				log_level = 4;
+				context->opts.log_level = ERROR;
 				break;
 			}
 
 			if (strcmp(optarg, "FATAL") == 0) {
-				log_level = 5;
+				context->opts.log_level = FATAL;
 				break;
 			}
 
 			printf("Inavild log level '%s'", optarg);
 			printf("\n\n");
 			printf("Valid levels are:\n"
-			       "  - TRACE\n"
+			       "  - TRACE [default]\n"
 			       "  - DEBUG\n"
 			       "  - INFO\n"
 			       "  - WARN\n"
 			       "  - ERROR\n"
-			       "  - FATAl\n");
+			       "  - FATAL\n");
 
-			// Not sure if this is okay or if we should free stuff first?
-			exit(EXIT_FAILURE);
-			break;
+			return EXIT_FAILURE;
 
 		case 'd':
 			/* 
@@ -171,7 +192,9 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
 
        To be done later
      */
-			printf("Yeah... I'm totally running as a deamon now ;)\n");
+			context->opts.daemon = true;
+
+			printf("-d (Run as deamon) is currently not supported\n");
 			break;
 
 		case 'h':
@@ -182,23 +205,11 @@ static void __gun_cli_parse_commandline(int argc, char *argv[],
        prints help message and exits
      */
 		default:
-			__print_help_and_exit();
-			break;
+			return __print_help_and_exit(argv[0]);
 		}
 	}
 
-	/*
-   * TODO the getopt stuff
-   *
-   * usage: build/gun [-d] --peer ws://localhost:8080/gun --peer wss://something.else [-q | --quiet] [-l LOGLEVEL | --log-level LOGLEVEL]
-
-   *
-   * where
-   * - d is fork into the background (run as a daemon) to be done later
-   * - --peer is one or more websocket URLs of peers to connect to
-   * -q --quiet: silence all logging
-   * -l set log level of both libwebsockets and our own logging (see log.h for a valid list of levels)
-   */
+	return EXIT_SUCCESS;
 }
 
 int main(int argc, char *argv[])
@@ -217,9 +228,18 @@ int main(int argc, char *argv[])
 
 	__gun_cli_parse_commandline(argc, argv, context);
 
-	// gun_context_add_peer(context, "ws://localhost:3030");
+	if (must_exit == true) {
+		goto out;
+	}
 
-	lws_set_log_level(log_level, NULL);
+	if (!context->opts.quiet) {
+		lws_set_log_level(context->opts.log_level, NULL);
+	}
+
+	if (gun_com_start(context) < 0) {
+		log_fatal("Could not connect to peers.  Do you have any?");
+		goto out;
+	}
 
 	if (gun_com_start(context) < 0) {
 		log_fatal("Could not connect to peers.  Do you have any?");
