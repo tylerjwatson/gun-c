@@ -1,19 +1,8 @@
-
-
-#include <asm-generic/errno-base.h>
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h> /* for exit */
 #include <getopt.h>
 #include <string.h>
 #include <libwebsockets.h>
-
-/* 
-  Not sure if this is needed here?
-  
-  It is in gun.h to set the bool members
-*/
-#include <stdbool.h>
 
 #include "log.h"
 #include "gun.h"

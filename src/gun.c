@@ -9,10 +9,49 @@
 #include "url.h"
 #include "log.h"
 #include "dup.h"
+#include "mjson.h"
 
-static void __gun_on_message(struct gun_context *context, size_t len,
-			     const char *msg)
+#define MAX_ID_LENGTH 256
+
+static void __gun_on_message(struct gun_peer *peer, size_t len, const char *msg)
 {
+	char id[32];
+	size_t id_len;
+
+	if (len <= 0 || len > GUN_MAX_MSG_LENGTH) {
+		return;
+	}
+
+	if (mjson_find(msg, len, "$", NULL, NULL) == MJSON_TOK_ARRAY) {
+		int koff, klen, voff, vlen, vtype, off;
+
+		for (off = 0; (off = mjson_next(msg, len, off, &koff, &klen,
+						&voff, &vlen, &vtype)) != 0;) {
+			__gun_on_message(peer, vlen, msg + voff);
+			// printf("blank key: %.*s, value: %.*s type %d\n", klen,
+			//        json + koff, vlen, json + voff, vtype);
+		}
+
+		return;
+	}
+
+	if ((id_len = mjson_get_string(msg, len, "$.#", id, sizeof(id)) ==
+		      -1)) {
+		log_error("gun: item does not appear to be a gun message.");
+		return;
+	}
+
+	if (gun_dup_check(&peer->context->dup, id)) {
+		log_debug("dup: seen this id before, discarding.");
+		return;
+	}
+
+	gun_dup_track(&peer->context->dup, id);
+
+	log_trace("gun: message peer=%s:%d id=%s contents=%s", peer->url->host,
+		  peer->url->port, id, msg);
+
+	// TODO: forward to our peers
 }
 
 int gun_context_new(struct gun_context **out_context)

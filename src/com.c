@@ -54,11 +54,8 @@ static int wsi_callback(struct lws *wsi, enum lws_callback_reasons reason,
 			 peer->url->host, peer->url->port);
 		break;
 	case LWS_CALLBACK_CLIENT_RECEIVE:
-		log_trace("com: rx msg=%s len=%d peer=%s:%d", (const char *)buf,
-			  len, peer->url->host, peer->url->port);
-
 		if (context->on_message != NULL) {
-			context->on_message(context, len, (const char *)buf);
+			context->on_message(peer, len, (const char *)buf);
 		}
 		break;
 	case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:

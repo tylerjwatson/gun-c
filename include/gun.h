@@ -12,16 +12,18 @@
 extern "C" {
 #endif
 
+#define GUN_MAX_MSG_LENGTH (256 * 1024 * 1024)
+
 // forward declarations
 struct yuarel;
-struct gun_context;
+struct gun_peer;
 struct ht;
 
 /**
  * Callback that happens when a message has been received from the
  * com module.
  */
-typedef void (*gun_msg_cb_t)(struct gun_context *context, size_t msg_len,
+typedef void (*gun_msg_cb_t)(struct gun_peer *peer, size_t msg_len,
 			     const char *msg);
 
 struct gun_dup_context {

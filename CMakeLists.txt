@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(gunc VERSION 0.1)
 
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 find_package(Libwebsockets CONFIG REQUIRED)
 find_library(WS websockets REQUIRED)
 
@@ -23,3 +26,5 @@ include_directories("include")
 
 target_link_libraries(gunc ${WS})
 target_link_libraries(gun gunc ${WS})
+
+add_subdirectory("tests")
