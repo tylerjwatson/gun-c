@@ -18,7 +18,6 @@ void __gun_dup_collect_garbage(struct lws_sorted_usec_list *sul)
 	struct ht_iterator iter = ht_iterator(context->id_table);
 	struct gun_dup_entry *entry;
 	time_t now;
-	int count = 0;
 
 	while (ht_next(&iter)) {
 		entry = (struct gun_dup_entry *)iter.value;
@@ -29,13 +28,12 @@ void __gun_dup_collect_garbage(struct lws_sorted_usec_list *sul)
 		}
 
 		if (difftime(entry->expiry, now) < 0) {
+			log_info("dup: removing %s as it has expired.",
+				 iter.key);
 			ht_remove(context->id_table, iter.key);
 			free(entry);
-			count++;
 		}
 	}
-
-	log_trace("dup: gc: %d expired items removed", count);
 
 	lws_sul_schedule(context->ws_context, 0, &context->sul,
 			 __gun_dup_collect_garbage, GARBAGE_TIMER_USECS);
