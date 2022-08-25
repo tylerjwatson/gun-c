@@ -65,6 +65,15 @@ struct gun_context {
 
 struct gun_node {};
 
+/**
+  * Generates a new ID of the specified length into the pointer
+  * pointed to by soul.
+  *
+  * The pointer pointed to by out_soul must be allocated and
+  * have enough space for the len plus the null byte.
+  */
+void gun_generate_id(size_t len, char *soul);
+
 int gun_context_new(struct gun_context **out_context);
 
 /**

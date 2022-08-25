@@ -1,3 +1,4 @@
+#include "gun.h"
 #include <check.h>
 
 #include "../src/mjson.h"
@@ -31,15 +32,28 @@ START_TEST(test_blank_iterator)
 }
 END_TEST
 
+START_TEST(id_generator)
+{
+	char id[9];
+	gun_generate_id(8, id);
+
+	printf("id %s\n", id);
+}
+END_TEST
+
 int main(void)
 {
 	Suite *s = suite_create("Gunc");
 	TCase *c = tcase_create("mjson");
+	TCase *id = tcase_create("ID generator");
 	SRunner *runner;
 
 	tcase_add_test(c, test_mjson_array_iterator);
 	tcase_add_test(c, test_blank_iterator);
+	tcase_add_test(id, id_generator);
+
 	suite_add_tcase(s, c);
+	suite_add_tcase(s, id);
 
 	runner = srunner_create(s);
 
