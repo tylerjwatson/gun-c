@@ -35,7 +35,7 @@ END_TEST
 START_TEST(id_generator)
 {
 	char id[9];
-	gun_generate_id(8, id);
+	gun_generate_random_string(8, id);
 
 	printf("id %s\n", id);
 }

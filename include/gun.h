@@ -38,6 +38,7 @@ struct gun_peer {
 	struct gun_context *context;
 	struct yuarel *url;
 	struct lws_sorted_usec_list sul;
+	struct lws *ws_handle;
 	struct gun_peer *next;
 	uint16_t retries;
 };
@@ -51,9 +52,9 @@ struct gun_context_options {
 };
 
 struct gun_context {
+  char id[8];
 	struct gun_peer *peer_list;
 	struct lws_context *ws_context;
-	struct lws *lws;
 	struct lws_sorted_usec_list sul;
 	struct gun_dup_context dup;
 	gun_msg_cb_t on_message;
@@ -67,12 +68,12 @@ struct gun_node {};
 
 /**
   * Generates a new ID of the specified length into the pointer
-  * pointed to by soul.
+  * pointed to by id.
   *
-  * The pointer pointed to by out_soul must be allocated and
-  * have enough space for the len plus the null byte.
+  * The pointer pointed to by id must be allocated and
+  * have enough space for the characters plus the null byte.
   */
-void gun_generate_id(size_t len, char *soul);
+void gun_generate_random_string(size_t len, char *id);
 
 int gun_context_new(struct gun_context **out_context);
 

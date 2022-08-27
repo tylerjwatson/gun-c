@@ -221,13 +221,10 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
+	log_info("gun: our ID is %s", context->id);
+
 	if (!context->opts.quiet) {
 		lws_set_log_level(context->opts.log_level, NULL);
-	}
-
-	if (gun_com_start(context) < 0) {
-		log_fatal("Could not connect to peers.  Do you have any?");
-		goto out;
 	}
 
 	if (gun_com_start(context) < 0) {

@@ -30,7 +30,7 @@ static void wsi_connect_to_peer(struct lws_sorted_usec_list *sul)
 	info.ssl_connection = 0;
 	info.protocol = "gun";
 	info.local_protocol_name = "gun";
-	info.pwsi = &context->lws;
+	info.pwsi = &peer->ws_handle;
 	info.userdata = peer;
 
 	if (lws_client_connect_via_info(&info) == NULL) {
@@ -116,4 +116,23 @@ int gun_com_start(struct gun_context *context)
 int gun_com_service_request(struct gun_context *context)
 {
 	return lws_service(context->ws_context, 0);
+}
+
+int gun_com_write(const struct gun_peer *peer, const char *data)
+{
+	char buf[65535];
+	size_t len = strlen(data);
+
+	if (len > 65535 - LWS_PRE) {
+		log_fatal("com: data length %d would overflow max packet size.", len);
+		return -EOVERFLOW;
+	}
+
+	memcpy(&buf[LWS_PRE], data, len);
+	if (lws_write(peer->ws_handle, &buf[LWS_PRE], len, LWS_WRITE_TEXT) == -1) {
+		log_error("com: cannot write data to peer %s:%d.", peer->url->host, peer->url->port);
+		return -1;
+	}
+
+	return 0;
 }

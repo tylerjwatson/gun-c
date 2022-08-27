@@ -14,6 +14,9 @@
 
 #define MAX_ID_LENGTH 256
 
+static const char alphabet[] =
+	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz";
+
 static void __gun_on_message(struct gun_peer *peer, size_t len, const char *msg)
 {
 	char id[32];
@@ -57,11 +60,8 @@ static void __gun_on_message(struct gun_peer *peer, size_t len, const char *msg)
 	// TODO: forward to our peers
 }
 
-void gun_generate_id(size_t len, char *id)
+void gun_generate_random_string(size_t len, char *id)
 {
-	static const char *alphabet =
-		"0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz";
-	static size_t alphabet_len = 61;
 
 	if (len == 0)
 		return;
@@ -69,7 +69,8 @@ void gun_generate_id(size_t len, char *id)
 	id[--len] = '\0';
 
 	while (len > 0) {
-		id[--len] = alphabet[(int)(rand() % (alphabet_len + 1))];
+		int i = rand() % sizeof(alphabet) - 1;
+		id[--len] = alphabet[i];
 	}
 }
 
@@ -92,7 +93,11 @@ int gun_context_init(struct gun_context *context)
 {
 	int ret = 0;
 
+	// initialize random for gun_generate_id
+	srand(time(NULL));
+
 	memset(context, 0, sizeof(*context));
+	gun_generate_random_string(8, context->id);
 
 	context->on_message = __gun_on_message;
 	context->opts.log_level = TRACE;
@@ -104,9 +109,6 @@ int gun_context_init(struct gun_context *context)
 	if (gun_dup_init(context, &context->dup, 900) < 0) {
 		return ret;
 	}
-
-	// initialize random for gun_generate_id
-	srand(time(NULL));
 
 	return ret;
 }
