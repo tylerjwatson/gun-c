@@ -12,6 +12,7 @@ find_library(WS websockets REQUIRED)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(gunc
+  src/dam.c
   src/ht.c
   src/mjson.c
   src/log.c

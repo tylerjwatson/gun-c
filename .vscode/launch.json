@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/gun",
-            "args": [],
+            "args": ["--peer", "ws://localhost:3030/gun"],
             "cwd": "${workspaceFolder}"
         }
     ]

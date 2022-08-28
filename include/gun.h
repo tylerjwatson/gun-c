@@ -34,6 +34,7 @@ struct gun_dup_context {
 };
 
 struct gun_peer {
+  char id[16];
 	void *peer_data;
 	struct gun_context *context;
 	struct yuarel *url;
@@ -52,7 +53,7 @@ struct gun_context_options {
 };
 
 struct gun_context {
-  char id[8];
+  char id[16];
 	struct gun_peer *peer_list;
 	struct lws_context *ws_context;
 	struct lws_sorted_usec_list sul;

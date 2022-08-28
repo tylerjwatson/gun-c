@@ -10,6 +10,7 @@
 #include "url.h"
 #include "log.h"
 #include "dup.h"
+#include "dam.h"
 #include "mjson.h"
 
 #define MAX_ID_LENGTH 256
@@ -32,8 +33,6 @@ static void __gun_on_message(struct gun_peer *peer, size_t len, const char *msg)
 		for (off = 0; (off = mjson_next(msg, len, off, &koff, &klen,
 						&voff, &vlen, &vtype)) != 0;) {
 			__gun_on_message(peer, vlen, msg + voff);
-			// printf("blank key: %.*s, value: %.*s type %d\n", klen,
-			//        json + koff, vlen, json + voff, vtype);
 		}
 
 		return;
@@ -57,12 +56,19 @@ static void __gun_on_message(struct gun_peer *peer, size_t len, const char *msg)
 	log_trace("gun: message peer=%s:%d id=%s contents=%s", peer->url->host,
 		  peer->url->port, id, msg);
 
+	/*
+	 * false from these message handlers means the message has been
+	 * handled
+	 */
+	if (gun_dam_handle_message(peer, msg, len) == false) {
+		return;
+	}
+
 	// TODO: forward to our peers
 }
 
 void gun_generate_random_string(size_t len, char *id)
 {
-
 	if (len == 0)
 		return;
 

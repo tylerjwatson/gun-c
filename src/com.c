@@ -120,7 +120,7 @@ int gun_com_service_request(struct gun_context *context)
 
 int gun_com_write(const struct gun_peer *peer, const char *data)
 {
-	char buf[65535];
+	unsigned char buf[65535];
 	size_t len = strlen(data);
 
 	if (len > 65535 - LWS_PRE) {
