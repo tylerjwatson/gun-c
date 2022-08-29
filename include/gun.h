@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #define GUN_MAX_MSG_LENGTH (256 * 1024 * 1024)
+#define GUN_MAX_PACKET_LENGTH 65535
 
 // forward declarations
 struct yuarel;
